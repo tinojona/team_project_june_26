@@ -23,14 +23,17 @@ impacts <- read_csv("00_pipeline_data/warning_level.csv") |>
     mutate(date_EU = format(timestep, "%d.%m.%y"))
 
 # load and reproject shapefile
-shp_distr=read_sf("00_pipeline_data/district_shapefile/") |>
-    dplyr::select(BEZNAME, geometry)
+shp_distr=read_sf("00_pipeline_data/district_shapefile/")
 shp_distr <- st_transform(shp_distr, crs = 4326)
-
 
 # extract dates from data and convert to more visual form
 unique_dates_US <- unique(impacts$timestep)
 date_formatted <- format(unique_dates_US, "%d %b")  # gives "17 Jun"
+
+# lookup for labels
+label_lookup <- shp_distr |>
+  sf::st_drop_geometry() |>
+  dplyr::select(BEZNAME, BEZ_label)
 
 #----
 
@@ -51,7 +54,7 @@ ui <- fluidPage(
           style = "font-size: 100px; color: #1a1a1a; letter-spacing: -0.5px; font-weight: 700;"
         ),
         tags$span(
-          "heat-related mortality",
+          "heat-health",
           class = "heatwave-text",
           style = "font-size: 100px; color: #1a1a1a; letter-spacing: -0.5px;"
         ),
@@ -180,7 +183,7 @@ ui <- fluidPage(
 
   # main layout — flex container replacing fluidRow
   tags$div(
-    style = "display: flex; align-items: stretch; padding: 0 15px;",
+    style = "display: flex; align-items: stretch; padding: 0 15px; margin-top: 60px;",
 
     # left column — buttons + map
     tags$div(

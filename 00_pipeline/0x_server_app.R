@@ -25,7 +25,15 @@ server <- function(input, output, session) {
     # render base map once
     output$heat_map <- renderLeaflet({
         leaflet(map_data()) |>
-            addProviderTiles(providers$CartoDB.Positron) |>
+            # addTiles(
+            #     urlTemplate = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+            #     attribution = "&copy; OpenStreetMap contributors &copy; CARTO"
+            # )
+        addTiles(
+            urlTemplate = "https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg",
+            attribution = "&copy; swisstopo",
+            options = tileOptions(maxZoom = 18)
+        )|>
             htmlwidgets::onRender("
     function(el, x) {
         var style = document.createElement('style');
@@ -64,7 +72,7 @@ server <- function(input, output, session) {
                 color       = "#FFFFFF",
                 weight      = 1.2,
                 layerId     = ~BEZNAME,
-                label       = ~paste0(BEZNAME, ": risk = ", risk),
+                label       = ~paste0(BEZ_label, ": risk = ", risk),
                 highlightOptions = highlightOptions(
                     weight       = 2,
                     color        = "#555555",
@@ -92,7 +100,7 @@ server <- function(input, output, session) {
                 color       = "#FFFFFF",
                 weight      = 1.2,
                 layerId     = ~BEZNAME,
-                label = ~paste0(BEZNAME, ": ", dplyr::case_when(
+                label = ~paste0(BEZ_label, ": ", dplyr::case_when(
                     risk == 0 ~ "None",
                     risk == 1 ~ "Low",
                     risk == 2 ~ "Medium",
@@ -273,7 +281,9 @@ server <- function(input, output, session) {
             lims(y = c(0, 1)) +
             scale_x_date(date_labels = "%d %b", date_breaks = "1 day") +
             labs(
-                title = paste0(selected_address_data()$district[1]),
+                title = label_lookup$BEZ_label[
+                    match(selected_address_data()$district[1], label_lookup$BEZNAME)
+                ]
             ) +
             theme_minimal() +
             theme(
